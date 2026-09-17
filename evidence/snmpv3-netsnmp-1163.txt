@@ -1,0 +1,184 @@
+The v3 session the report cites: the standard client against the author's simulator
+===================================================================================
+Reproduced 2026-09-17. Raw output below, unedited except for the secrets.
+
+Agent:    SnmpSimulator.Cli, device profile built in ("Core Router"), UDP port 1163. It
+          refuses to start without a signed license token; the token is signed by the
+          author's key and is not in this repository.
+Manager:  net-snmp 5.9.5.2 — snmpget / snmpwalk.
+Users:    lab-sha256 (SHA-256/AES-128), lab-sha512 (SHA-512/AES-256), lab-authonly (SHA-256).
+Secrets:  written as ***. They are throwaway passphrases generated for this run; no
+          production credential appears here, and none of them are in this repository.
+
+What to read in it
+
+  Sections 1 and 2 — data read over v3 with authPriv at two key lengths: SHA-256/AES-128 and
+    SHA-512/AES-256. Both answer, and the values are the simulated device's.
+  Section 3 — a full walk of the MPLS subtree (mplsStdMIB 1.3.6.1.2.1.10.166): 48 lines, no
+    parser warnings, exit 0. MPLS-TE tunnels, LSR in/out segments, LDP peers and sessions,
+    L3VPN VRFs.
+  Sections 4a-4e — the five USM failure reports, each one provoked by the standard client and
+    each one read back against the RFC 3414 section 5 counter the agent keeps for it. The
+    client's own words, in order: "Unknown user name", "Authentication failure (incorrect
+    password, community or key)", "Decryption error", "Unsupported security level",
+    "Not in time window".
+  Section 4f — the case that is not one of the five, kept because it is the one that
+    surprises: an authPriv request for a user configured without privacy cannot be decrypted
+    before the level is judged, so the agent counts it as a decryption error. Counted, not
+    hidden.
+  Section 5 — with good credentials it still reads after all five, so the failures were the
+    attempts and not the device.
+
+  The counters are a second, independent read: a snmpget on 1.3.6.1.6.3.15.1.1.x.0. The
+  simulator exposes its engine counters to GET, which a hardware device usually does not —
+  that is how each failure is tied to its counter here, instead of taking the client's word
+  for it. usmStatsUnknownEngineIds also climbs, because every fresh client invocation does
+  v3 engine discovery first; that is the protocol working, not a failure.
+
+What a reader can and cannot check
+
+  Can: that the log is internally consistent — each failure moves exactly the counter that
+  belongs to it, the exit codes match, and the client's wording matches the counter names.
+  Cannot: re-run it. Producing it needs the simulator and a signed token, and this repository
+  contains neither.
+
+--------------------------------------------------------------------------------------------
+
+=== 1) authPriv SHA-256 / AES-128 ===
+$ snmpget -v3 -l authPriv -u lab-sha256 -a SHA-256 -A *** -x AES -X *** -On 127.0.0.1:1163 1.3.6.1.2.1.1.1.0 1.3.6.1.2.1.1.3.0
+.1.3.6.1.2.1.1.1.0 = STRING: Acme OctopusOS 22.3, Core Router
+.1.3.6.1.2.1.1.3.0 = Timeticks: (360600) 1:00:06.00
+  exit=0
+
+=== 2) authPriv SHA-512 / AES-256 ===
+$ snmpget -v3 -l authPriv -u lab-sha512 -a SHA-512 -A *** -x AES-256 -X *** -On 127.0.0.1:1163 1.3.6.1.2.1.1.1.0 1.3.6.1.2.1.1.3.0
+.1.3.6.1.2.1.1.1.0 = STRING: Acme OctopusOS 22.3, Core Router
+.1.3.6.1.2.1.1.3.0 = Timeticks: (360600) 1:00:06.00
+  exit=0
+
+=== 3) full walk of the MPLS subtree, mplsStdMIB = 1.3.6.1.2.1.10.166 ===
+$ snmpwalk -v3 -l authPriv -u lab-sha256 -a SHA-256 -A *** -x AES -X *** -On 127.0.0.1:1163 1.3.6.1.2.1.10.166
+.1.3.6.1.2.1.10.166.2.1.4.1.1.1 = STRING: "1"
+.1.3.6.1.2.1.10.166.2.1.4.1.1.2 = STRING: "2"
+.1.3.6.1.2.1.10.166.2.1.4.1.2.1 = INTEGER: 3
+.1.3.6.1.2.1.10.166.2.1.4.1.2.2 = INTEGER: 4
+.1.3.6.1.2.1.10.166.2.1.4.1.3.1 = Gauge32: 16001
+.1.3.6.1.2.1.10.166.2.1.4.1.3.2 = Gauge32: 16011
+.1.3.6.1.2.1.10.166.2.1.7.1.1.1 = STRING: "1"
+.1.3.6.1.2.1.10.166.2.1.7.1.1.2 = STRING: "2"
+.1.3.6.1.2.1.10.166.2.1.7.1.2.1 = INTEGER: 3
+.1.3.6.1.2.1.10.166.2.1.7.1.2.2 = INTEGER: 4
+.1.3.6.1.2.1.10.166.2.1.7.1.3.1 = INTEGER: 16002
+.1.3.6.1.2.1.10.166.2.1.7.1.3.2 = INTEGER: 16012
+.1.3.6.1.2.1.10.166.2.1.7.1.4.1 = Gauge32: 16002
+.1.3.6.1.2.1.10.166.2.1.7.1.4.2 = Gauge32: 16012
+.1.3.6.1.2.1.10.166.2.1.7.1.7.1 = STRING: "P1"
+.1.3.6.1.2.1.10.166.2.1.7.1.7.2 = STRING: "P2"
+.1.3.6.1.2.1.10.166.3.2.2.1.1.1.1.56.2 = Gauge32: 1
+.1.3.6.1.2.1.10.166.3.2.2.1.1.2.1.56.3 = Gauge32: 2
+.1.3.6.1.2.1.10.166.3.2.2.1.2.1.1.56.2 = Gauge32: 1
+.1.3.6.1.2.1.10.166.3.2.2.1.2.2.1.56.3 = Gauge32: 1
+.1.3.6.1.2.1.10.166.3.2.2.1.3.1.1.56.2 = Gauge32: 56
+.1.3.6.1.2.1.10.166.3.2.2.1.3.2.1.56.3 = Gauge32: 56
+.1.3.6.1.2.1.10.166.3.2.2.1.4.1.1.56.2 = Gauge32: 2
+.1.3.6.1.2.1.10.166.3.2.2.1.4.2.1.56.3 = Gauge32: 3
+.1.3.6.1.2.1.10.166.3.2.2.1.5.1.1.56.2 = STRING: "LSP-Core Router-to-PE2"
+.1.3.6.1.2.1.10.166.3.2.2.1.5.2.1.56.3 = STRING: "LSP-Core Router-to-PE3"
+.1.3.6.1.2.1.10.166.3.2.2.1.34.1.1.56.2 = INTEGER: 1
+.1.3.6.1.2.1.10.166.3.2.2.1.34.2.1.56.3 = INTEGER: 1
+.1.3.6.1.2.1.10.166.3.2.2.1.35.1.1.56.2 = INTEGER: 1
+.1.3.6.1.2.1.10.166.3.2.2.1.35.2.1.56.3 = INTEGER: 1
+.1.3.6.1.2.1.10.166.4.1.3.2.1.1.2 = STRING: "2.2.2.2"
+.1.3.6.1.2.1.10.166.4.1.3.2.1.1.3 = STRING: "3.3.3.3"
+.1.3.6.1.2.1.10.166.4.1.3.3.1.2.2 = INTEGER: 5
+.1.3.6.1.2.1.10.166.4.1.3.3.1.2.3 = INTEGER: 5
+.1.3.6.1.2.1.10.166.4.1.3.3.1.3.2 = INTEGER: 2
+.1.3.6.1.2.1.10.166.4.1.3.3.1.3.3 = INTEGER: 2
+.1.3.6.1.2.1.10.166.11.1.2.2.1.1.86.82.70.45.67.82.73.84.73.67.65.76 = STRING: "VRF-CRITICAL"
+.1.3.6.1.2.1.10.166.11.1.2.2.1.1.86.82.70.45.67.85.83.84.79.77.69.82.83 = STRING: "VRF-CUSTOMERS"
+.1.3.6.1.2.1.10.166.11.1.2.2.1.2.86.82.70.45.67.82.73.84.73.67.65.76 = INTEGER: 2
+.1.3.6.1.2.1.10.166.11.1.2.2.1.2.86.82.70.45.67.85.83.84.79.77.69.82.83 = INTEGER: 1
+.1.3.6.1.2.1.10.166.11.1.2.2.1.3.86.82.70.45.67.82.73.84.73.67.65.76 = STRING: "Critical services VRF"
+.1.3.6.1.2.1.10.166.11.1.2.2.1.3.86.82.70.45.67.85.83.84.79.77.69.82.83 = STRING: "Customer traffic VRF"
+.1.3.6.1.2.1.10.166.11.1.2.2.1.4.86.82.70.45.67.82.73.84.73.67.65.76 = STRING: "65000:200"
+.1.3.6.1.2.1.10.166.11.1.2.2.1.4.86.82.70.45.67.85.83.84.79.77.69.82.83 = STRING: "65000:100"
+.1.3.6.1.2.1.10.166.11.1.2.2.1.6.86.82.70.45.67.82.73.84.73.67.65.76 = INTEGER: 1
+.1.3.6.1.2.1.10.166.11.1.2.2.1.6.86.82.70.45.67.85.83.84.79.77.69.82.83 = INTEGER: 1
+.1.3.6.1.2.1.10.166.11.1.2.2.1.7.86.82.70.45.67.82.73.84.73.67.65.76 = Gauge32: 2
+.1.3.6.1.2.1.10.166.11.1.2.2.1.7.86.82.70.45.67.85.83.84.79.77.69.82.83 = Gauge32: 4
+  exit=0
+
+--- the five USM failures, then the counters the agent keeps for them ---
+
+=== 4a) a user that does not exist ===
+$ snmpget -v3 -l authPriv -u quien-no-existe -a SHA-256 -A *** -x AES -X *** 127.0.0.1:1163 1.3.6.1.2.1.1.3.0
+snmpget: Unknown user name
+  exit=1
+    usmStatsUnsupportedSecLevels = Counter32: 0
+    usmStatsNotInTimeWindows  = Counter32: 0
+    usmStatsUnknownUserNames   = Counter32: 1
+    usmStatsUnknownEngineIds  = Counter32: 5
+    usmStatsWrongDigests      = Counter32: 0
+    usmStatsDecryptionErrors  = Counter32: 0
+
+=== 4b) right user, wrong authentication passphrase ===
+$ snmpget -v3 -l authPriv -u lab-sha256 -a SHA-256 -A *** -x AES -X *** 127.0.0.1:1163 1.3.6.1.2.1.1.3.0   (auth key deliberately wrong)
+snmpget: Authentication failure (incorrect password, community or key)
+  exit=1
+    usmStatsUnsupportedSecLevels = Counter32: 0
+    usmStatsNotInTimeWindows  = Counter32: 0
+    usmStatsUnknownUserNames   = Counter32: 1
+    usmStatsUnknownEngineIds  = Counter32: 7
+    usmStatsWrongDigests      = Counter32: 1
+    usmStatsDecryptionErrors  = Counter32: 0
+
+=== 4c) right authentication, wrong encryption passphrase ===
+$ snmpget -v3 -l authPriv -u lab-sha256 -a SHA-256 -A *** -x AES -X *** 127.0.0.1:1163 1.3.6.1.2.1.1.3.0   (auth correct, priv deliberately wrong)
+snmpget: Decryption error
+  exit=1
+    usmStatsUnsupportedSecLevels = Counter32: 0
+    usmStatsNotInTimeWindows  = Counter32: 0
+    usmStatsUnknownUserNames   = Counter32: 1
+    usmStatsUnknownEngineIds  = Counter32: 9
+    usmStatsWrongDigests      = Counter32: 1
+    usmStatsDecryptionErrors  = Counter32: 1
+
+=== 4d) a security level the user is not configured for (authNoPriv asked of an authPriv user) ===
+$ snmpget -v3 -l authNoPriv -u lab-sha256 -a SHA-256 -A *** 127.0.0.1:1163 1.3.6.1.2.1.1.3.0
+snmpget: Unsupported security level
+  exit=1
+    usmStatsUnsupportedSecLevels = Counter32: 1
+    usmStatsNotInTimeWindows  = Counter32: 0
+    usmStatsUnknownUserNames   = Counter32: 1
+    usmStatsUnknownEngineIds  = Counter32: 11
+    usmStatsWrongDigests      = Counter32: 1
+    usmStatsDecryptionErrors  = Counter32: 1
+
+=== 4e) an authenticated request from outside the time window (boots/time forced) ===
+$ snmpget -v3 -l authPriv -u lab-sha256 -a SHA-256 -A *** -x AES -X *** -Z 9999,999999 127.0.0.1:1163 1.3.6.1.2.1.1.3.0
+snmpget: Not in time window
+  exit=1
+    usmStatsUnsupportedSecLevels = Counter32: 1
+    usmStatsNotInTimeWindows  = Counter32: 2
+    usmStatsUnknownUserNames   = Counter32: 1
+    usmStatsUnknownEngineIds  = Counter32: 13
+    usmStatsWrongDigests      = Counter32: 1
+    usmStatsDecryptionErrors  = Counter32: 1
+
+=== 4f) what the same failure is NOT: an authPriv request for a user with no privacy ===
+$ snmpget -v3 -l authPriv -u lab-authonly -a SHA-256 -A *** -x AES -X *** 127.0.0.1:1163 1.3.6.1.2.1.1.3.0
+snmpget: Decryption error
+  exit=1
+  (the message cannot be decrypted before the level is judged, so this one is counted
+   as a decryption error, not as an unsupported level -- see the counter below)
+    usmStatsUnsupportedSecLevels = Counter32: 1
+    usmStatsNotInTimeWindows  = Counter32: 2
+    usmStatsUnknownUserNames   = Counter32: 1
+    usmStatsUnknownEngineIds  = Counter32: 15
+    usmStatsWrongDigests      = Counter32: 1
+    usmStatsDecryptionErrors  = Counter32: 2
+
+=== 5) after all of it, good credentials still read ===
+$ snmpget -v3 -l authPriv -u lab-sha256 -a SHA-256 -A *** -x AES -X *** 127.0.0.1:1163 1.3.6.1.2.1.1.3.0
+DISMAN-EVENT-MIB::sysUpTimeInstance = Timeticks: (360700) 1:00:07.00
+  exit=0

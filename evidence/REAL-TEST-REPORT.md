@@ -48,7 +48,9 @@ Started our `SnmpSimulator.Cli` (OLT) on 127.0.0.1:1163. Tested with real tools:
   subtree walk over v3 (48 lines, no parser warnings), and all five USM failure reports
   (unknown user / wrong digest / unsupported secLevel / decryption / notInTimeWindow)
   decode to their correct `usmStats*` OIDs. Note: usmStats counters ride in the report
-  PDU, they are not GET-able from the tree. Evidence: `linkedin-evidence/snmpv3-netsnmp-1163.txt`.
+  PDU, they are not GET-able from the tree. Evidence: `snmpv3-netsnmp-1163.txt`
+  (raw log, reproduced 17-Sep-2026; see `README.md` in this directory for what it does
+  and does not let a reader check).
 
 ## 4. Performance check (driver hot path)
 
