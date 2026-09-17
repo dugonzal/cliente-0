@@ -15,6 +15,9 @@ https://dugonzal.github.io/blog/
 - `open-reference/contracts/` — los contratos de cable compartidos entre el agente SNMP y el
   gestor, más los códecs de telemetría (C37.118, IEC 104) y la configuración de sesión SNMP.
   Es la única pieza de código fuente que se publica. Licencia MIT.
+- `open-reference/stub/` — la puerta de licencia, en abierto y ejecutable: comprueba el token
+  firmado contra la clave pública del autor y se niega a seguir sin él. No es el producto, es
+  la puerta que el producto tiene delante. Licencia MIT.
 - `docs/` — dos planes de implementación de monitorización MPLS: qué OID corresponde a qué
   (mapa RFC 3815, 4364, 4382, 8029) y en qué fases se construyó.
 - `evidence/` — el informe de interoperabilidad contra net-snmp real, con sus tablas de
@@ -107,6 +110,17 @@ dotnet build open-reference/contracts/SnmpContracts.csproj -c Release
 Compila sin advertencias y sin errores sobre .NET 10. El proyecto de contratos no tiene
 dependencia de ninguna librería SNMP a propósito: no puede acoplarse al driver.
 
+Y la puerta de licencia se prueba sin pedirme nada:
+
+```
+dotnet run --project open-reference/stub
+```
+
+Sin token responde `License check failed: This software is licensed to its authors...` y sale
+con código 2; con un token válido imprime sus datos y emite una trama IEC 104 de ejemplo. La
+clave pública del autor está incrustada a propósito: verifica y no firma, así que publicarla no
+entrega nada. El stub es independiente: no es el guardián del producto ni su fuente.
+
 Y se lee: `evidence/REAL-TEST-REPORT.md` está escrito con la fecha de cada medición y con los
 huecos que quedaron.
 
@@ -115,7 +129,8 @@ enseña funcionando sobre los 18 nodos cuando haga falta.
 
 ## Qué no está aquí, y por qué
 
-- El código del motor, del driver, del simulador y del guardián de licencia.
+- El código del motor, del driver, del simulador y del guardián de licencia. Lo que sí está es
+  el stub, que reproduce la comprobación de arranque, no el guardián.
 - El laboratorio: 18 nodos, guiones de despliegue, informes crudos por etapa. Van bajo
   petición.
 - Capturas de tráfico y credenciales de cualquier tipo. Se hizo un barrido antes de publicar
@@ -137,5 +152,10 @@ published. The usage example is available on request.
 Numbers worth knowing: 120,000 polls across 6 agents at 38,302 req/s with 0 failures
 (14-Sep-2026), and 207/207 tests green at the last stage. The report includes the earlier
 measurements that no longer reproduce, and says so.
+
+`open-reference/stub/` is the license gate itself, in the open and runnable: it checks an
+author-signed token against the embedded public key and refuses to start without one. It is not
+the product — it is the door the product sits behind. The public key is embedded on purpose: it
+verifies, and it cannot sign.
 
 Contact: dugonzal@protonmail.com · https://github.com/dugonzal

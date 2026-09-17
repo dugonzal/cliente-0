@@ -7,6 +7,11 @@ OPEN / reference (release/open/)
     example are published as source. They describe the wire format and how the
     stack is composed. License: MIT (see below).
 
+    The standalone license-gate stub (open-reference/stub/) is published the same
+    way: it is an independent work that reproduces the startup check against the
+    author's PUBLIC key and refuses to run without an author-signed token. It is
+    not the license guard, and its source is not the guard's source.
+
 CLOSED / product (release/product/)
     The management engine (SnmpNms), the SNMP driver (SnmpDriver), the simulator
     (SnmpSimulator), the license guard (SnmpLicensing) and the operator apps are
@@ -15,7 +20,7 @@ CLOSED / product (release/product/)
     one the product refuses to start.
 
 License
-    - The OPEN reference (SnmpContracts, docs, example): MIT License.
+    - The OPEN reference (SnmpContracts, docs, example, license-gate stub): MIT License.
     - The CLOSED product (compiled binaries + the license guard): proprietary.
       It is source-available to the author only. Use, redistribution, modification
       or operation without a valid signed license granted by the author is
