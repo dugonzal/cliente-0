@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Shared wire contract between the SNMP agent (producer) and the NMS (consumer).
+       Deliberately has NO SharpSnmpLib dependency so it can never couple to the
+       manager driver. Holds the telemetry codecs (C37.118 / IEC 104) and the SNMP
+       session config contract. -->
+
+</Project>

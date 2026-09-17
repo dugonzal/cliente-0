@@ -1,0 +1,29 @@
+SnmpLab — dual release
+
+This repository is published as a MIXED release:
+
+OPEN / reference (release/open/)
+    The neutral protocol contracts (SnmpContracts), documentation and a reference
+    example are published as source. They describe the wire format and how the
+    stack is composed. License: MIT (see below).
+
+CLOSED / product (release/product/)
+    The management engine (SnmpNms), the SNMP driver (SnmpDriver), the simulator
+    (SnmpSimulator), the license guard (SnmpLicensing) and the operator apps are
+    distributed ONLY as compiled, obfuscated binaries. Their source is NOT
+    published. Running them requires a valid, author-signed license token; without
+    one the product refuses to start.
+
+License
+    - The OPEN reference (SnmpContracts, docs, example): MIT License.
+    - The CLOSED product (compiled binaries + the license guard): proprietary.
+      It is source-available to the author only. Use, redistribution, modification
+      or operation without a valid signed license granted by the author is
+      prohibited and terminates any right to use it.
+
+Enforcement
+    The product embeds a license guard (Ed25519/ECDSA P-256 signed token). It never
+    contacts the network and sends nothing; it only verifies the signed license at
+    startup and blocks if it is missing, malformed, tampered with, or expired.
+
+    Author tool: LicenseTool (gen-keys | sign | verify) issues licenses.
