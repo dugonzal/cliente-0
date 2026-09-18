@@ -78,3 +78,13 @@ practical ceiling. The design has no per-request socket or timer allocation.
 The 01-Sep numbers do not reproduce — the driver is ~55% faster today. Agent count is NOT
 the scaling variable here: one loopback agent matches six (~36–40k req/s is the client +
 loopback ceiling), and oversubscribing in-flight requests in-process costs ~16%.
+
+### What this does not measure
+
+Throughput, not endurance. Each 120,000-poll batch above runs in about **three seconds**
+(120,000 / 38,302), so the whole re-measured set is roughly **13 seconds of load**. No multi-hour
+soak with the driver running continuously has been measured, and this table is not one.
+
+The harness that produced the two in-process rows is published, as it ran, in
+[`../open-reference/harness/SnmpStressDemo/`](../open-reference/harness/SnmpStressDemo/). The rows
+with the agents in separate processes were measured with a launcher that is not in this repository.

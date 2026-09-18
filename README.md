@@ -14,18 +14,21 @@ https://dugonzal.github.io/blog/
 
 - `open-reference/contracts/` — los contratos de cable compartidos entre el agente SNMP y el
   gestor, más los códecs de telemetría (C37.118, IEC 104) y la configuración de sesión SNMP.
-  Es la única pieza de código fuente que se publica. Licencia MIT.
+  Licencia MIT.
 - `open-reference/stub/` — la puerta de licencia, en abierto y ejecutable: comprueba el token
   firmado contra la clave pública del autor y se niega a seguir sin él. No es el producto, es
   la puerta que el producto tiene delante. Licencia MIT.
+- `open-reference/harness/SnmpStressDemo/` — el arnés de carga que produjo la tabla de
+  rendimiento, copiado tal cual como se ejecutó. Levanta agentes simulados y lanza las
+  peticiones por un socket UDP compartido. Licencia MIT.
 - `docs/` — dos planes de implementación de monitorización MPLS: qué OID corresponde a qué
   (mapa RFC 3815, 4364, 4382, 8029) y en qué fases se construyó.
 - `evidence/` — el informe de interoperabilidad contra net-snmp real, con sus tablas de
   rendimiento, y la tabla de etapas del laboratorio con sus recuentos de pruebas.
 
 El motor de gestión, el driver, el simulador y el guardián de licencia se distribuyen solo
-como binarios compilados, con token firmado por el autor; su fuente no se publica. El ejemplo
-de uso tampoco. Si quieres verlos, pídelos: se enseñan en vivo.
+como binarios compilados, con token firmado por el autor; su fuente no se publica. Los ejemplos
+de uso tampoco, salvo el arnés de carga de arriba. Si quieres verlos, pídelos: se enseñan en vivo.
 
 ## El recorrido
 
@@ -68,8 +71,10 @@ pruebas anterior lo había visto. Apareció en la etapa 17 con el parque entero 
 
 ## Números
 
-Interoperabilidad y rendimiento, medidos con el driver compilado y un arnés fuera del
-repositorio. La tabla completa, con las filas que no se reprodujeron, está en
+Interoperabilidad y rendimiento, medidos con el driver compilado. Las filas con los agentes en
+el mismo proceso se lanzaron con el arnés de `open-reference/harness/SnmpStressDemo/`; las de
+agentes en procesos separados, con un lanzador que no está en este repositorio. La tabla
+completa, con las filas que no se reprodujeron y un apartado de lo que **no** mide, está en
 `evidence/REAL-TEST-REPORT.md`.
 
 - 120.000 peticiones contra 6 agentes, 256 en vuelo: 38.302 req/s, 0 fallos (14-sep-2026).
@@ -131,8 +136,9 @@ enseña funcionando sobre los 18 nodos cuando haga falta.
 
 - El código del motor, del driver, del simulador y del guardián de licencia. Lo que sí está es
   el stub, que reproduce la comprobación de arranque, no el guardián.
-- El laboratorio: 18 nodos, guiones de despliegue, informes crudos por etapa. Van bajo
-  petición.
+- El laboratorio no está aquí: está **en abierto**, entero, en
+  [dugonzal/mpls-lab](https://github.com/dugonzal/mpls-lab) — 18 nodos, 17 bancos con su
+  verificador y su evidencia.
 - Capturas de tráfico y credenciales de cualquier tipo. Se hizo un barrido antes de publicar
   y no hay ninguna.
 - Material comercial y de captación, que no es código ni evidencia.
@@ -147,7 +153,9 @@ license declares open: the shared wire contracts (MIT), two MPLS monitoring impl
 plans, and the evidence — a real-interoperability report against net-snmp 5.9.5 and the
 per-stage test counts of the lab. The management engine, the driver, the simulator and the
 license guard ship as compiled binaries with an author-signed token; their source is not
-published. The usage example is available on request.
+published. One usage example is published anyway, because it is the method behind the numbers:
+`open-reference/harness/SnmpStressDemo/`. The lab itself is open at
+https://github.com/dugonzal/mpls-lab.
 
 Numbers worth knowing: 120,000 polls across 6 agents at 38,302 req/s with 0 failures
 (14-Sep-2026), and 207/207 tests green at the last stage. The report includes the earlier
